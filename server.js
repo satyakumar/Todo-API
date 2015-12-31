@@ -1,10 +1,10 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
+var _ = require('underscore');
 var port = process.env.PORT || 4000;
 var todoNextId = 1;
 var todos = [];
-console.log(todoNextId)
 app.use(bodyParser.json());
 app.get('/',function(req,res){
 	res.send('To Do list app');
@@ -15,13 +15,8 @@ app.get('/todos',function(req,res) {
 });
 // GET /todos/:id
 app.get('/todos/:id',function(req,res) {
-	var matchedId;
-	var id = parseInt(req.params.id,10);
-	todos.forEach(function(todo) {
-		if(todo.id === id) {
-			matchedId = todo;
-		}
-	});
+	var todoId = parseInt(req.params.id,10);
+	var matchedId = _.findWhere(todos,{id: todoId}); // http://underscorejs.org/#findWhere
 	if(matchedId) {
 		res.json(matchedId);
 	} else {
@@ -30,8 +25,12 @@ app.get('/todos/:id',function(req,res) {
 });
 // POST /todos
 app.post('/todos',function(req,res) {
-	var body = req.body;
+	var body = _.pick(req.body,'description','complete'); // http://underscorejs.org/#pick
+	if(!_.isBoolean(body.complete) || !_.isString(body.description) || body.description.trim().length === 0) {
+		return res.status(404).json({"error": "Please use valid parameters!"}); // Here by using return key word will stops the execution
+	}
 	body.id = todoNextId++;
+	body.description = body.description.trim();
 	todos.push(body);
 	console.log(body);
 	res.json(body);
