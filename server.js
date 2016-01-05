@@ -10,8 +10,22 @@ app.get('/',function(req,res){
 	res.send('To Do list app');
 });
 // GET /todos
+// GET /todos?complete=true
+// GET /todos?complete=true&q=goto
 app.get('/todos',function(req,res) {
-	res.json(todos);
+	var queryParams = req.query;
+	var filterTodos = todos;
+	if(queryParams.hasOwnProperty('complete') && queryParams.complete === 'true') {
+		filterTodos = _.where(filterTodos, {'complete': true});
+	} else if(queryParams.hasOwnProperty('complete') && queryParams.complete === 'false'){
+		filterTodos = _.where(filterTodos, {'complete': false});
+	}
+	if(queryParams.hasOwnProperty('q') && queryParams.q.trim().length > 0) {
+		filterTodos = _.filter(filterTodos,function(todo) {
+			return todo.description.toLowerCase().indexOf(queryParams.q.trim().toLowerCase()) > -1;
+		})
+	}
+	res.json(filterTodos);
 });
 // GET /todos/:id
 app.get('/todos/:id',function(req,res) {
